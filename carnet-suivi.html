@@ -1,0 +1,828 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Carnet · suivi de séances</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme:light dark;
+  --bg:#faf4f3; --surface:#ffffff; --surface2:#f3e8e8; --line:#e7d4d7; --text:#2a1d20; --muted:#816d72;
+  --accent:#d62f52; --accent-soft:rgba(214,47,82,.10); --on-accent:#ffffff;
+  --good:#17895c; --good-soft:rgba(23,137,92,.12); --warn:#b86e12; --warn-soft:rgba(184,110,18,.14);
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#130f10; --surface:#201a1b; --surface2:#2b2324; --line:#3d2b2f; --text:#f6eeee; --muted:#a99c9f;
+    --accent:#f04e6c; --accent-soft:rgba(240,78,108,.16); --on-accent:#1a0b0f;
+    --good:#5fd3a0; --good-soft:rgba(95,211,160,.13); --warn:#efb26a; --warn-soft:rgba(239,178,106,.15);
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#130f10; --surface:#201a1b; --surface2:#2b2324; --line:#3d2b2f; --text:#f6eeee; --muted:#a99c9f;
+  --accent:#f04e6c; --accent-soft:rgba(240,78,108,.16); --on-accent:#1a0b0f;
+  --good:#5fd3a0; --good-soft:rgba(95,211,160,.13); --warn:#efb26a; --warn-soft:rgba(239,178,106,.15);
+}
+:root[data-theme="light"]{color-scheme:light}
+*,*::before,*::after{box-sizing:inherit}
+html{background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:400 16px/1.45 Outfit,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-tap-highlight-color:transparent}
+button,input,textarea,select{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+h1,h2,h3,p{margin:0}
+.mono{font-family:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace}
+.muted{color:var(--muted)}
+#app{max-width:560px;margin:0 auto;padding:18px 16px 190px}
+
+/* titres */
+h1{font:800 40px/1 Syne,Outfit,system-ui,sans-serif;color:var(--accent);letter-spacing:-.01em}
+h2{font:700 22px/1.15 Syne,Outfit,system-ui,sans-serif}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px}
+.top .mono{font-size:14px;margin-top:6px}
+.hello{margin-top:4px;font-weight:500}
+.sec{margin:26px 2px 12px;font:700 20px/1.2 Syne,Outfit,system-ui,sans-serif}
+
+/* blocs */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:20px;margin-bottom:14px}
+.note{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:22px;padding:16px 18px;margin-bottom:14px}
+.note b{display:block;font-size:17px;margin-bottom:4px}
+.note p{color:var(--muted);font-size:15px}
+.note .btn{margin-top:12px}
+
+.week{display:flex;align-items:flex-end;gap:10px}
+.week .big{font:800 84px/.85 Syne,Outfit,system-ui,sans-serif;color:var(--accent)}
+.week .of{font-size:15px;padding-bottom:6px}
+.phase{display:inline-block;margin:14px 0 4px;padding:7px 16px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.phasetxt{color:var(--muted);font-size:15px;margin:8px 0 16px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.stats div{padding:14px 14px 16px;border-left:1px solid var(--line);min-width:0}
+.stats div:first-child{border-left:0}
+.stats small{display:block;color:var(--muted);font-size:14px}
+.stats b{display:block;margin-top:10px;font:500 24px/1 "JetBrains Mono",ui-monospace,monospace}
+
+/* boutons */
+.btn{display:block;width:100%;border:0;border-radius:18px;padding:16px 18px;background:var(--accent);color:var(--on-accent);font-weight:700;font-size:18px}
+.btn.sm{display:inline-block;width:auto;padding:12px 18px;font-size:16px;border-radius:14px}
+.btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+.chipbtn{border:1px solid var(--line);background:transparent;border-radius:14px;padding:10px 14px;font-weight:500;font-size:15px;white-space:nowrap}
+.link{background:none;border:0;padding:10px 6px;color:var(--muted);font-weight:500}
+.link.danger{color:var(--warn)}
+
+/* séances */
+.sess{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:24px;padding:16px;margin-bottom:12px}
+.sess.cur{border:2px solid var(--accent);padding:15px}
+.sess .let{flex:none;width:54px;height:54px;border-radius:17px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font:800 22px Syne,Outfit,sans-serif}
+.sess .tx{flex:1;min-width:0}
+.sess .tx b{display:block;font-size:21px;font-weight:600;line-height:1.2}
+.sess .tx span{color:var(--muted);font-size:15px}
+.sess .rt{font-size:14px;color:var(--muted);text-align:right;flex:none}
+.sess .rt.on{color:var(--accent)}
+.sess .rt.ok{color:var(--good)}
+.sess.fait{opacity:.8}
+
+/* séance en cours */
+.shead{position:sticky;top:env(safe-area-inset-top,0px);z-index:6;background:var(--bg);margin:-18px -16px 10px;padding:14px 16px 0}
+.shr{display:flex;align-items:center;gap:12px;padding-bottom:12px}
+.back{flex:none;width:46px;height:46px;border-radius:14px;border:1px solid var(--line);background:var(--surface);font-size:24px;line-height:1}
+.sht{flex:1;min-width:0}
+.sht h2{font-size:21px}
+.sht .mono{font-size:13px;margin-top:3px}
+.tot{flex:none;padding:8px 12px;border-radius:14px;font:500 15px "JetBrains Mono",monospace;background:var(--good-soft);color:var(--good)}
+.tot.neg{background:var(--warn-soft);color:var(--warn)}
+.tot.neu{background:var(--surface2);color:var(--text)}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden;margin:0 -16px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:4px;transition:width .3s}
+
+.ex{padding:0;overflow:hidden;scroll-margin-top:calc(env(safe-area-inset-top,0px) + 96px)}
+.ex .exh{display:flex;align-items:center;gap:14px;width:100%;text-align:left;background:none;border:0;padding:18px 20px}
+.ex.open .exh{padding-bottom:6px}
+.num{flex:none;width:26px;color:var(--muted);font-size:16px}
+.exn{flex:1;min-width:0}
+.exn b{display:block;font-size:24px;font-weight:600;line-height:1.2}
+.ex.closed .exn b{font-size:19px}
+.exn small{display:block;color:var(--muted);font-size:16px;margin-top:2px}
+.ex.closed .exn small{font-size:14px}
+.st{flex:none;font-size:14px;color:var(--muted)}
+.st.ok{color:var(--good);font-size:20px}
+.st.skip{color:var(--warn)}
+.ex.isdone{opacity:.75}
+.exb{padding:0 20px 20px}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 14px}
+.chip{font:500 14px "JetBrains Mono",monospace;padding:7px 11px;border-radius:11px;background:var(--surface2)}
+.chip.acc{background:var(--accent-soft);color:var(--accent)}
+.chip.good{background:var(--good-soft);color:var(--good)}
+.chip.bad{background:var(--warn-soft);color:var(--warn)}
+.cue{color:var(--muted);font-size:16px;margin-bottom:12px}
+.prev{font:400 14px/1.5 "JetBrains Mono",monospace;color:var(--text);margin-bottom:14px}
+.memo{font-size:15px;padding:10px 12px;border-radius:12px;background:var(--surface2);margin-bottom:10px}
+.memo.warn{background:var(--warn-soft)}
+.memo b{font-weight:600;margin-right:6px}
+.sets{border-top:1px solid var(--line);margin:0 -20px;padding:16px 20px 0}
+.editor{border:1.5px solid var(--accent);border-radius:22px;padding:16px;margin-bottom:10px;background:var(--bg)}
+.eh{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:12px}
+.eh b{font-size:21px;font-weight:600}
+.eh span{font-size:13px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.two label{display:block;color:var(--muted);font-size:15px;margin-bottom:6px;min-height:22px}
+.stepper{display:flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:20px;background:var(--surface);padding:6px}
+.stepper input{flex:1;min-width:0;width:100%;text-align:center;background:transparent;border:0;font:600 26px "JetBrains Mono",monospace;padding:6px 0}
+.step{flex:none;width:44px;height:48px;border:0;border-radius:15px;background:var(--surface2);font-size:24px;font-weight:600;line-height:1}
+.rpe{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin:12px 0 6px}
+.rp{min-width:0;height:46px;border:0;border-radius:13px;background:var(--surface2);font:500 16px "JetBrains Mono",monospace;padding:0}
+.rp.on{background:var(--accent);color:var(--on-accent);font-weight:600}
+.hint{font-size:13px;color:var(--muted);margin-bottom:10px}
+.why{font-size:15px;padding:10px 12px;border-radius:12px;background:var(--accent-soft);margin-bottom:12px}
+.setrow{display:flex;align-items:center;gap:14px;width:100%;text-align:left;border:0;background:var(--surface2);border-radius:16px;padding:14px 16px;margin-bottom:8px;font-size:18px}
+.setrow .n{color:var(--muted);width:18px;font-size:15px}
+.setrow .v{flex:1;font-weight:500}
+.setrow .r{color:var(--muted);font-size:14px}
+.setrow .ok{color:var(--good);font-size:20px}
+.setrow.todo{background:transparent;border:1px dashed var(--line);color:var(--muted);font-size:15px}
+.acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.fin{margin-top:22px}
+
+/* progression */
+.val{font:500 32px "JetBrains Mono",monospace;color:var(--accent)}
+.rowb{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.wchart{display:block;width:100%;height:auto;margin:14px 0}
+.bars{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;align-items:end;height:150px;margin-top:14px}
+.bars div{display:flex;flex-direction:column;justify-content:flex-end;height:100%;align-items:stretch}
+.bars i{display:block;background:var(--accent);border-radius:10px 10px 4px 4px;min-height:5px}
+.bars div.low i{opacity:.55}
+.bl{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:10px;margin-top:8px;text-align:center;font-size:14px;color:var(--muted)}
+.vol{display:grid;grid-template-columns:104px 1fr 56px;align-items:center;gap:12px;padding:9px 0}
+.vol .tr{height:9px;border-radius:9px;background:var(--surface2);overflow:hidden}
+.vol .tr i{display:block;height:100%;border-radius:9px;background:var(--warn)}
+.vol .tr i.full{background:var(--good)}
+.vol span:last-child{text-align:right;font-size:14px;color:var(--muted)}
+.rec{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.rec:first-of-type{border-top:0}
+.rec b{font-weight:500}
+.rec span{color:var(--muted);text-align:right;font-size:13px}
+
+/* réglages */
+.field{display:block;margin-bottom:14px}
+.field>span{display:block;color:var(--muted);font-size:15px;margin-bottom:6px}
+.inp,.sel{width:100%;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:13px 14px;font-size:17px}
+.sel{appearance:none;-webkit-appearance:none}
+.days{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.tg{display:flex;align-items:center;gap:14px;justify-content:space-between;padding:14px 0;border-top:1px solid var(--line)}
+.tg:first-of-type{border-top:0}
+.tg b{display:block;font-weight:600}
+.tg small{color:var(--muted);font-size:14px;line-height:1.35;display:block;margin-top:2px}
+.sw{flex:none;width:56px;height:32px;border-radius:32px;border:0;background:var(--line);position:relative;transition:background .2s}
+.sw::after{content:"";position:absolute;top:4px;left:4px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.sw[aria-checked="true"]{background:var(--accent)}
+.sw[aria-checked="true"]::after{transform:translateX(24px)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.seg button{border:1px solid var(--line);background:transparent;border-radius:12px;padding:11px 0;font-weight:500}
+.seg button.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent);font-weight:600}
+.stack{display:grid;gap:10px}
+
+/* nav / chrono / modales */
+#nav{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line)}
+.navin{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom,0px))}
+.nv{position:relative;display:flex;flex-direction:column;align-items:center;gap:3px;border:0;background:none;border-radius:18px;padding:9px 0 7px;color:var(--muted);font-size:13px;font-weight:500}
+.nv.on{background:var(--accent-soft);color:var(--accent)}
+.nv svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.dot{position:absolute;top:6px;left:calc(50% + 8px);width:9px;height:9px;border-radius:50%;background:var(--accent)}
+#timer{position:fixed;left:0;right:0;bottom:calc(78px + env(safe-area-inset-bottom,0px));z-index:19;padding:0 12px;pointer-events:none}
+.tbar{pointer-events:auto;max-width:536px;margin:0 auto;background:var(--surface);border:1px solid var(--accent);border-radius:20px;overflow:hidden}
+.tbar.fin{background:var(--accent-soft)}
+.tprog{height:4px;background:var(--line)}
+.tprog i{display:block;height:100%;width:0;background:var(--accent)}
+.trow{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.trow b{font-size:22px}
+.trow .sp{flex:1}
+.trow .chipbtn{padding:8px 10px;font-size:14px}
+.backdrop{position:fixed;inset:0;z-index:30;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:560px;max-height:88vh;overflow:auto;background:var(--surface);border-radius:28px 28px 0 0;padding:22px 20px calc(24px + env(safe-area-inset-bottom,0px))}
+.sheet h2{margin-bottom:6px}
+.sheet p.muted{font-size:15px;margin-bottom:14px}
+.sheet textarea{width:100%;min-height:150px;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:12px;font-size:15px;resize:vertical}
+.sheet textarea.code{font:400 12px/1.4 "JetBrains Mono",monospace;min-height:190px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--bg);border-radius:14px;padding:14px;margin-bottom:8px;font-weight:500}
+.wl{margin-top:14px}
+.wl .rec span{display:flex;align-items:center;gap:10px}
+.wl .x{border:0;background:none;color:var(--warn);padding:4px 8px;font-size:15px}
+#toast{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom,0px));transform:translate(-50%,12px);z-index:40;background:var(--text);color:var(--bg);padding:12px 18px;border-radius:14px;font-size:15px;max-width:calc(100% - 32px);text-align:center;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+@media (max-width:360px){.two{grid-template-columns:1fr}.rpe{grid-template-columns:repeat(4,1fr)}.vol{grid-template-columns:90px 1fr 50px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="timer"></div>
+<nav id="nav" aria-label="Navigation principale"></nav>
+<div id="modal"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<noscript>Ce carnet a besoin de JavaScript pour fonctionner.</noscript>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- Constantes ---------- */
+const KEY='carnet-suivi-v1';
+const KEYS=['A','B','C'];
+const MUSCLES=['Fessiers','Quadriceps','Ischios','Lombaires','Dos','Pectoraux','Épaules','Biceps','Triceps','Abdos'];
+const DAYN=['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+const PH={
+  adaptation:{label:'Adaptation',rpe:7,main:3,acc:2,mr:[10,12],reps:'10-12',txt:'Tu apprends les gestes et tu trouves tes charges. Reste loin de l’échec.'},
+  accumulation:{label:'Accumulation',rpe:8,main:4,acc:3,mr:[8,10],reps:'8-10',txt:'Le volume monte : c’est la phase où fessiers et cuisses prennent de l’épaisseur.'},
+  intensification:{label:'Intensification',rpe:9,main:4,acc:3,mr:[6,8],reps:'6-8',txt:'Charges plus lourdes, répétitions plus basses. Garde une technique propre.'},
+  decharge:{label:'Décharge',rpe:6,main:2,acc:2,mr:[8,10],reps:'8-10',txt:'Semaine légère : tu récupères pour repartir plus forte.'}
+};
+const phaseOf=w=>w<=3?'adaptation':w<=6?'accumulation':w<=9?'intensification':'decharge';
+
+const EX={
+  squat:{n:'Squat',p:'Quadriceps',s:['Fessiers'],role:'main',reps:[8,10],rest:150,step:2.5,start:20,per:'barre',mult:1,
+    cue:'Pieds largeur d’épaules, dos gainé. Descends au moins cuisses parallèles au sol, puis pousse dans les talons.',
+    alts:['Leg press','Hack squat','V-squat','Squat Smith machine'],
+    altStart:{'Leg press':60,'Hack squat':30,'V-squat':30,'Squat Smith machine':20},altStep:{'Leg press':5,'Hack squat':5,'V-squat':5}},
+  hipA:{n:'Hip thrust',p:'Fessiers',s:['Ischios'],role:'main',reps:[8,12],rest:120,step:5,start:30,per:'barre',mult:1,
+    cue:'Haut du dos sur le banc, menton rentré. Monte le bassin, serre les fessiers 1 s en haut sans cambrer le bas du dos.',
+    alts:['Hip thrust machine','Hip thrust haltère','Pont fessier à la barre (au sol)']},
+  lunge:{n:'Fentes marchées',p:'Fessiers',s:['Quadriceps'],role:'acc',reps:[10,12],rl:' /jambe',rest:90,step:1,start:8,per:'par haltère',mult:2,
+    cue:'Grand pas, buste légèrement penché en avant pour cibler les fessiers. Pousse dans le talon avant.',
+    alts:['Fentes arrière','Fentes Smith machine','Step-up sur banc']},
+  legcurl:{n:'Leg curl couché',p:'Ischios',s:[],role:'acc',reps:[10,12],rest:90,step:2.5,start:20,per:'machine',mult:1,
+    cue:'Hanches plaquées au banc. Ramène les talons vers les fesses, retour lent sur 3 s.',
+    alts:['Leg curl assis','Swiss ball curl']},
+  abd:{n:'Abduction machine',p:'Fessiers',s:[],role:'acc',reps:[12,15],rest:75,step:2.5,start:25,per:'machine',mult:1,
+    cue:'Buste légèrement penché en avant, pousse avec les fessiers et marque 1 s à l’ouverture.',
+    alts:['Abduction à la poulie','Abduction avec élastique']},
+  plank:{n:'Gainage',p:'Abdos',s:[],role:'acc',reps:[30,45],timed:true,rest:60,step:2.5,start:0,per:'poids du corps',mult:1,
+    cue:'Coudes sous les épaules, bassin aligné, ventre serré. Ici les « répétitions » sont des secondes.',
+    alts:['Gainage sur les genoux','Planche latérale']},
+  legcurlS:{n:'Leg curl assis',p:'Ischios',s:[],role:'acc',reps:[10,12],rest:90,step:2.5,start:20,per:'machine',mult:1,
+    cue:'Dos calé, cuisses bien maintenues. Fléchis les jambes en contrôle, retour lent sur 3 s.',
+    alts:['Leg curl couché','Leg curl une jambe à la fois']},
+  backext:{n:'Back extension',p:'Lombaires',s:['Fessiers','Ischios'],role:'acc',reps:[12,15],rest:75,step:2.5,start:0,bw:true,per:'poids du corps',mult:1,
+    cue:'Dos neutre, descends en contrôle puis remonte en serrant les fessiers, sans cambrer en haut. Ajoute un disque quand 15 répétitions deviennent faciles.',
+    alts:['Back extension avec disque','Good morning léger']},
+  sissy:{n:'Sissy squat',p:'Quadriceps',s:[],role:'acc',reps:[10,12],rest:75,step:2.5,start:0,bw:true,per:'poids du corps',mult:1,
+    cue:'Genoux vers l’avant, talons décollés, buste et cuisses alignés. Descends selon ton amplitude et accroche-toi à un support si besoin.',
+    alts:['Sissy squat avec support','Sissy squat à la machine']},
+  incl:{n:'Développé incliné haltères 30°',p:'Pectoraux',s:['Épaules','Triceps'],role:'main',reps:[8,12],rest:150,step:1,start:8,per:'par haltère',mult:2,
+    cue:'Coudes à 45°, descente contrôlée sur 3 s. Ne descends pas sous la ligne du torse.',
+    alts:['Développé machine convergente','Développé incliné Smith','Pompes surélevées']},
+  lat:{n:'Tirage vertical',p:'Dos',s:['Biceps'],role:'main',reps:[8,12],rest:120,step:2.5,start:30,per:'poulie',mult:1,
+    cue:'Poitrine sortie, tire les coudes vers les hanches. Pas d’élan avec le buste.',
+    alts:['Tirage vertical prise serrée','Tractions assistées','Pull-over poulie']},
+  ohp:{n:'Développé épaules haltères',p:'Épaules',s:['Triceps'],role:'acc',reps:[10,12],rest:120,step:1,start:6,per:'par haltère',mult:2,
+    cue:'Assise, dos calé, poignets au-dessus des coudes. Monte sans cambrer.',
+    alts:['Développé épaules machine','Arnold press']},
+  row:{n:'Rowing assis poulie',p:'Dos',s:['Biceps'],role:'acc',reps:[10,12],rest:90,step:2.5,start:30,per:'poulie',mult:1,
+    cue:'Tire vers le nombril, omoplates serrées 1 s, buste immobile.',
+    alts:['Rowing machine','Rowing haltère un bras']},
+  lraise:{n:'Élévations latérales',p:'Épaules',s:[],role:'acc',reps:[12,15],rest:60,step:0.5,start:3,per:'par haltère',mult:2,
+    cue:'Coudes légèrement fléchis, monte jusqu’à l’horizontale, redescends lentement.',
+    alts:['Élévations latérales poulie','Élévations latérales machine']},
+  tri:{n:'Triceps poulie',p:'Triceps',s:[],role:'acc',light:true,reps:[10,12],rest:60,step:2.5,start:15,per:'poulie',mult:1,
+    cue:'Coudes collés au corps, extension complète, retour contrôlé.',
+    alts:['Extension triceps à la corde','Dips assistés','Barre au front haltères']},
+  curl:{n:'Curl biceps haltères',p:'Biceps',s:[],role:'acc',light:true,reps:[10,12],rest:60,step:1,start:6,per:'par haltère',mult:2,
+    cue:'Coudes fixes, pas d’élan, descente sur 2-3 s.',
+    alts:['Curl marteau','Curl poulie','Curl incliné haltères']},
+  rdl:{n:'Soulevé de terre roumain',p:'Ischios',s:['Fessiers'],role:'main',reps:[8,10],rest:150,step:2.5,start:30,per:'barre',mult:1,
+    cue:'Genoux légèrement fléchis, bassin vers l’arrière, dos neutre. Barre collée aux jambes, descends sous les genoux puis remonte en serrant les fessiers.',
+    alts:['Soulevé de terre roumain haltères','Hip hinge à la poulie']},
+  hipC:{n:'Hip thrust lourd',p:'Fessiers',s:['Ischios'],role:'main',reps:[8,10],rest:150,step:5,start:35,per:'barre',mult:1,
+    cue:'Pause 1 s en haut, menton rentré, bassin stable.',
+    alts:['Pont fessier lourd (au sol)','Hip thrust machine']},
+  bulg:{n:'Fente bulgare',p:'Fessiers',s:['Quadriceps'],role:'acc',reps:[8,10],rl:' /jambe',rest:90,step:1,start:6,per:'par haltère',mult:2,
+    cue:'Pied arrière sur le banc, buste penché, descends en contrôle. Poids sur le talon avant.',
+    alts:['Fente bulgare Smith machine','Fentes arrière']},
+  legext:{n:'Leg extension',p:'Quadriceps',s:[],role:'acc',reps:[12,15],rest:75,step:2.5,start:20,per:'machine',mult:1,
+    cue:'Extension complète, pause 1 s en haut, descente lente.',
+    alts:['Leg extension un jambe à la fois']},
+  kick:{n:'Kickback poulie',p:'Fessiers',s:[],role:'acc',reps:[12,15],rl:' /jambe',rest:60,step:2.5,start:10,per:'poulie',mult:1,
+    cue:'Sangle à la cheville, buste légèrement penché. Pousse la jambe vers l’arrière en serrant la fesse, sans cambrer.',
+    alts:['Kickback machine','Donkey kick avec élastique']},
+  crunch:{n:'Crunch poulie',p:'Abdos',s:[],role:'acc',reps:[12,15],rest:60,step:2.5,start:15,per:'poulie',mult:1,
+    cue:'Arrondis le dos en rapprochant les côtes du bassin, expire en bas.',
+    alts:['Relevé de jambes','Crunch au sol lesté']}
+};
+const SESS={
+  A:{name:'Bas du corps 1',sub:'Ischios, fessiers et cuisses',ex:['rdl','bulg','hipA','legcurlS','legext']},
+  B:{name:'Haut du corps',sub:'Dos, pectoraux, épaules et abdos',ex:['lat','incl','row','ohp','lraise','tri','crunch']},
+  C:{name:'Bas du corps 2',sub:'Quadriceps, lombaires et fessiers',ex:['squat','backext','legcurl','sissy','abd']}
+};
+
+/* ---------- Utilitaires ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const pad=n=>String(n).padStart(2,'0');
+const fmt=n=>String(Math.round(n*100)/100).replace('.',',');
+const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
+const iso=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const parse=s=>{const a=s.split('-').map(Number);return new Date(a[0],a[1]-1,a[2],12)};
+const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate(),12);x.setDate(x.getDate()-((x.getDay()+6)%7));return x};
+const fmtRest=s=>{const m=Math.floor(s/60),r=s%60;return r?m+'’'+pad(r):m+'’'};
+const half=x=>Number.isInteger(x)?String(x):(Math.round(x*10)/10).toFixed(1).replace('.',',');
+const DOM_ICON={
+  home:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg>',
+  dumb:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18M7 15l4-5 3 3 5-7"/></svg>',
+  gear:'<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.5"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/></svg>'
+};
+
+/* ---------- État ---------- */
+function defState(){
+  return {v:1,cycle:1,start:iso(mondayOf(new Date())),days:[0,2,4],
+    prefs:{name:'',suggest:true,timer:true,beep:true,vibrate:true,wake:true,theme:'auto'},
+    logs:{},notes:{},weights:[],lastExport:null,firstUse:Date.now()};
+}
+const lid=(w,k,c)=>(c||S.cycle)+'-'+w+'-'+k;
+function sanitize(o){
+  const d=defState(),r=d;
+  if(!o||typeof o!=='object')return r;
+  if(typeof o.start==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(o.start))r.start=o.start;
+  r.cycle=Math.max(1,parseInt(o.cycle,10)||1);
+  if(Array.isArray(o.days)&&o.days.length===3)r.days=o.days.map(n=>clamp(parseInt(n,10)||0,0,6));
+  if(o.prefs&&typeof o.prefs==='object'){
+    for(const k in d.prefs){if(k in o.prefs){r.prefs[k]=typeof d.prefs[k]==='boolean'?!!o.prefs[k]:String(o.prefs[k]).slice(0,40)}}
+    if(!['auto','dark','light'].includes(r.prefs.theme))r.prefs.theme='auto';
+  }
+  if(o.logs&&typeof o.logs==='object'){
+    for(const id in o.logs){
+      const l=o.logs[id];if(!l||typeof l!=='object'||!KEYS.includes(l.key))continue;
+      const nl={cycle:Math.max(1,parseInt(l.cycle,10)||1),week:clamp(parseInt(l.week,10)||1,1,10),key:l.key,ex:{},started:l.started||null,finished:l.finished||null,done:!!l.done};
+      for(const eid in (l.ex||{})){
+        if(!EX[eid])continue;const e=l.ex[eid]||{};
+        const ne={sets:(Array.isArray(e.sets)?e.sets:[]).map(s=>({w:Math.max(0,+s.w||0),r:Math.max(0,+s.r||0),rpe:clamp(+s.rpe||8,1,10)})),extra:clamp(parseInt(e.extra,10)||0,0,6)};
+        if(e.alt&&EX[eid].alts.includes(e.alt))ne.alt=e.alt;
+        if(e.pain)ne.pain=String(e.pain).slice(0,300);
+        if(e.skipped)ne.skipped=true;
+        nl.ex[eid]=ne;
+      }
+      r.logs[lid(nl.week,nl.key,nl.cycle)]=nl;
+    }
+  }
+  if(o.notes&&typeof o.notes==='object'){for(const id in o.notes){if(EX[id]&&o.notes[id]&&o.notes[id].machine)r.notes[id]={machine:String(o.notes[id].machine).slice(0,200)}}}
+  if(Array.isArray(o.weights)){r.weights=o.weights.filter(x=>x&&/^\d{4}-\d{2}-\d{2}$/.test(x.d)&&+x.kg>20&&+x.kg<400).map(x=>({d:x.d,kg:+x.kg}))}
+  if(o.lastExport)r.lastExport=String(o.lastExport).slice(0,40);
+  if(+o.firstUse)r.firstUse=+o.firstUse;
+  return r;
+}
+let S=load();
+function load(){try{const r=localStorage.getItem(KEY);if(r)return sanitize(JSON.parse(r))}catch(e){}return defState()}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('Sauvegarde impossible sur cet appareil. Pense à exporter tes données.')}}
+
+const ui={tab:'home',sessKey:null,week:1,open:null,edit:{},draft:null,modal:null,timer:null,ac:null,wl:null};
+let tickH=null;
+
+/* ---------- Semaine / programme ---------- */
+const rawWeek=()=>Math.round((mondayOf(new Date())-parse(S.start))/864e5/7)+1;
+const curWeek=()=>clamp(rawWeek(),1,10);
+const getLog=(w,k,create)=>{const id=lid(w,k);let l=S.logs[id];if(!l&&create)l=S.logs[id]={cycle:S.cycle,week:w,key:k,ex:{},started:null,finished:null,done:false};return l};
+const getEx=(l,id)=>l.ex[id]||(l.ex[id]={sets:[]});
+function nSets(ex,w){const p=PH[phaseOf(w)];let n=ex.role==='main'?p.main:p.acc;if(ex.light)n=Math.max(2,n-1);return n}
+const repRange=(ex,w)=>ex.role==='main'?PH[phaseOf(w)].mr:ex.reps;
+function sessionDate(w,k){const d=parse(S.start);d.setDate(d.getDate()+(w-1)*7+S.days[KEYS.indexOf(k)]);return d}
+const shortDate=d=>d.toLocaleDateString('fr-FR',{weekday:'short',day:'numeric',month:'short'});
+const todayLong=()=>new Date().toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+
+function history(id,alt){
+  const out=[];
+  for(const l of Object.values(S.logs)){
+    const e=l.ex[id];if(!e||!e.sets.length)continue;
+    if((e.alt||null)!==(alt||null))continue;
+    out.push({order:l.cycle*1000+l.week*10+KEYS.indexOf(l.key),week:l.week,cycle:l.cycle,sets:e.sets,pain:e.pain||''});
+  }
+  return out.sort((a,b)=>a.order-b.order);
+}
+function prevEntry(id,alt,w,k){const o=S.cycle*1000+w*10+KEYS.indexOf(k);const h=history(id,alt).filter(x=>x.order<o);return h[h.length-1]||null}
+const ton=(ex,sets)=>sets.reduce((a,s)=>a+s.w*s.r*(ex.mult||1),0);
+const e1=s=>s.w>0?s.w*(1+s.r/30):s.r;
+
+function firstIncomplete(k,w){
+  const l=getLog(w,k);
+  for(const id of SESS[k].ex){const ex=EX[id],e=(l&&l.ex[id])||{sets:[]};if(!e.skipped&&e.sets.length<nSets(ex,w)+(e.extra||0))return id}
+  return null;
+}
+const inProgressKey=()=>{const w=curWeek();return KEYS.find(k=>{const l=getLog(w,k);return l&&l.started&&!l.done})||null};
+const nextKey=()=>{const w=curWeek();return inProgressKey()||KEYS.find(k=>{const l=getLog(w,k);return !(l&&l.done)})||'A'};
+
+/* ---------- Conseil de charge ---------- */
+const stepOf=(ex,alt)=>(alt&&ex.altStep&&ex.altStep[alt])||ex.step;
+const startOf=(ex,alt)=>(alt&&ex.altStart&&ex.altStart[alt]!=null)?ex.altStart[alt]:ex.start;
+function suggest(id,w,k,idx,e,alt){
+  const ex=EX[id],T=PH[phaseOf(w)].rpe,rg=repRange(ex,w),lo=rg[0],hi=rg[1];
+  const before=e.sets.slice(0,idx);
+  let ref=null,cross=false,pe=null;
+  if(before.length)ref=before[before.length-1];
+  else{pe=prevEntry(id,alt,w,k);if(pe){ref=pe.sets[pe.sets.length-1];cross=true}}
+  if(!ref)return {w:startOf(ex,alt),r:ex.timed?40:Math.round((lo+hi)/2),rpe:T,why:'Point de départ prudent. Fais ta première série, indique le RPE : les charges suivantes sont ajustées pour toi.'};
+  if(!S.prefs.suggest){
+    const s=cross?pe.sets[Math.min(idx,pe.sets.length-1)]:ref;
+    return {w:s.w,r:s.r,rpe:T,why:'Repris de la série précédente.'};
+  }
+  const diff=ref.rpe-T,st=stepOf(ex,alt);
+  let steps=0;
+  if(diff<=-2)steps=2;else if(diff<=-1)steps=1;else if(diff>=2)steps=-2;else if(diff>=1)steps=-1;
+  let topRange=false,lowRange=false;
+  if(!ex.timed){
+    if(diff<=0&&ref.r>=hi&&steps<1){steps=1;topRange=true}
+    if(diff>=0&&ref.r<lo&&steps>=0){steps=-1;lowRange=true}
+  }
+  let nw=Math.max(0,Math.round((ref.w+steps*st)*2)/2),nr,why;
+  if(ex.timed){
+    nw=ref.w;nr=clamp(ref.r+(diff<=-1?5:diff>=1?-5:0),15,180);
+    why=diff<=-1?'Effort sous l’objectif : tiens 5 s de plus.':diff>=1?'Effort au-dessus de l’objectif : 5 s de moins.':'Bonne durée, garde le même rythme.';
+  }else{
+    if(steps>0)nr=clamp(ref.r-steps,lo,hi);
+    else if(steps<0)nr=clamp(ref.r-steps,lo,hi);
+    else nr=cross&&diff<=0?clamp(ref.r+1,lo,hi):clamp(ref.r,lo,hi);
+    if(steps>=2)why='RPE '+fmt(ref.rpe)+' pour un objectif de '+T+' : trop facile, monte de '+fmt(steps*st)+' kg.';
+    else if(steps===1)why=topRange?'Haut de fourchette atteint avec un effort maîtrisé : +'+fmt(st)+' kg.':'RPE '+fmt(ref.rpe)+' sous l’objectif de '+T+' : +'+fmt(st)+' kg.';
+    else if(steps===0)why=cross&&diff<=0&&nr>ref.r?'Même charge : vise 1 répétition de plus.':'Bonne charge, effort au niveau de l’objectif (RPE '+T+').';
+    else if(lowRange)why='Sous la fourchette de répétitions : baisse de '+fmt(-steps*st)+' kg.';
+    else why='RPE '+fmt(ref.rpe)+' au-dessus de l’objectif de '+T+' : baisse de '+fmt(-steps*st)+' kg.';
+  }
+  return {w:nw,r:nr,rpe:T,why};
+}
+function ensureDraft(id,idx,w,k,e,alt){
+  const key=id+':'+idx+':'+e.sets.length+':'+(alt||'');
+  if(ui.draft&&ui.draft.k===key)return ui.draft;
+  let d;
+  if(idx<e.sets.length){const s=e.sets[idx];d={w:s.w,r:s.r,rpe:s.rpe,why:''}}
+  else d=suggest(id,w,k,idx,e,alt);
+  d.k=key;d.ex=id;d.idx=idx;d.alt=alt;
+  return ui.draft=d;
+}
+
+/* ---------- Analyses ---------- */
+function stagnating(){
+  const out=[];
+  for(const id in EX){
+    const h=history(id,null).filter(x=>x.week!==10);
+    if(h.length<4)continue;
+    const v=h.map(x=>Math.max.apply(null,x.sets.map(e1))),n=v.length;
+    const base=Math.max.apply(null,v.slice(0,n-3));
+    if(v[n-3]<=base*1.005&&v[n-2]<=base*1.005&&v[n-1]<=base*1.005)out.push(EX[id].n);
+  }
+  return out;
+}
+function weekTon(w){
+  let t=0;
+  for(const l of Object.values(S.logs)){if(l.cycle!==S.cycle||l.week!==w)continue;for(const id in l.ex){if(EX[id])t+=ton(EX[id],l.ex[id].sets)}}
+  return t;
+}
+function volume(w){
+  const plan={},did={};MUSCLES.forEach(m=>{plan[m]=0;did[m]=0});
+  KEYS.forEach(k=>{SESS[k].ex.forEach(id=>{
+    const ex=EX[id],n=nSets(ex,w);plan[ex.p]+=n;ex.s.forEach(m=>plan[m]+=n*.5);
+    const l=getLog(w,k),e=l&&l.ex[id];
+    if(e){const c=e.sets.length;did[ex.p]+=c;ex.s.forEach(m=>did[m]+=c*.5)}
+  })});
+  return MUSCLES.map(m=>({m,plan:plan[m],did:did[m]})).filter(x=>x.plan>0);
+}
+function inProgress(){return !!inProgressKey()}
+
+/* ---------- Vues ---------- */
+const chipDelta=d=>d>0?'<span class="chip good">+'+fmt(d)+' kg</span>':d<0?'<span class="chip bad">−'+fmt(-d)+' kg</span>':'<span class="chip">= kg</span>';
+
+function vHome(){
+  const w=curWeek(),raw=rawWeek(),ph=PH[phaseOf(w)];
+  const rows=KEYS.map((k,i)=>({k,i,l:getLog(w,k)}));
+  const todo=rows.filter(r=>!(r.l&&r.l.done)),done=rows.filter(r=>r.l&&r.l.done);
+  const hasData=Object.values(S.logs).some(l=>Object.values(l.ex).some(e=>e.sets.length));
+  const base=S.lastExport?new Date(S.lastExport).getTime():S.firstUse;
+  const warn=hasData&&Date.now()-base>14*864e5;
+  const st=stagnating();
+  let h='<header class="top"><div><h1>Carnet</h1><p class="mono muted">'+esc(todayLong())+'</p>'+(S.prefs.name?'<p class="hello">Salut '+esc(S.prefs.name)+'</p>':'')+'</div><button class="chipbtn" data-act="weigh">Ma pesée</button></header>';
+  if(raw>10)h+='<div class="note"><b>Cycle terminé</b><p>Tu as bouclé les 10 semaines. Repars sur un nouveau cycle : tes dernières charges serviront de point de départ.</p><button class="btn sm" data-act="newcycle">Démarrer un nouveau cycle</button></div>';
+  h+='<div class="card"><div class="week"><span class="big">'+w+'</span><span class="of mono muted">/ 10 semaines</span></div><span class="phase">'+ph.label+'</span><p class="phasetxt">'+ph.txt+' RPE '+ph.rpe+' : il te reste environ '+(10-ph.rpe)+' répétitions en réserve.</p>'
+   +'<div class="stats"><div><small>Séries</small><b>'+ph.main+' et '+ph.acc+'</b></div><div><small>RPE cible</small><b>'+ph.rpe+'</b></div><div><small>Répétitions</small><b>'+ph.reps+'</b></div></div></div>';
+  if(warn)h+='<div class="note"><b>Tes données ne sont sauvegardées que sur ce téléphone</b><p>'+(S.lastExport?'Dernier export il y a plus de deux semaines.':'Tu n’as pas encore exporté tes données.')+' Vider les données du navigateur suffirait à tout perdre.</p><button class="btn sm" data-act="export">Exporter maintenant</button></div>';
+  if(st.length)h+='<div class="note"><b>Stagnation sur '+st.length+' exercice'+(st.length>1?'s':'')+'</b><p>'+st.map(esc).join(', ')+'. Trois séances sans gain de force estimée. Vérifie ton sommeil et tes calories, ou baisse la charge de 10 % pour repartir.</p></div>';
+  if(todo.length){
+    h+='<h2 class="sec">Reste à faire cette semaine</h2>';
+    todo.forEach((r,idx)=>{
+      const prog=r.l&&r.l.started;
+      h+='<button class="sess '+((prog||idx===0)?'cur':'')+'" data-act="open" data-k="'+r.k+'"><span class="let">'+r.k+'</span><span class="tx"><b>'+SESS[r.k].name+'</b><span>'+SESS[r.k].sub+'</span></span><span class="rt mono '+(prog?'on':'')+'">'+(prog?'en cours':esc(shortDate(sessionDate(w,r.k))))+'</span></button>';
+    });
+  }else h+='<div class="note"><b>Semaine terminée</b><p>Les 3 séances sont faites. Repos mérité : la progression se construit pendant la récupération.</p></div>';
+  if(done.length){
+    h+='<h2 class="sec">Faites cette semaine</h2>';
+    done.forEach(r=>{h+='<button class="sess fait" data-act="open" data-k="'+r.k+'"><span class="let">'+r.k+'</span><span class="tx"><b>'+SESS[r.k].name+'</b><span>'+SESS[r.k].sub+'</span></span><span class="rt ok mono">fait ✓</span></button>'});
+  }
+  return h;
+}
+
+function vSession(){
+  const k=ui.sessKey||(ui.sessKey=nextKey()),w=ui.week,def=SESS[k],ph=PH[phaseOf(w)];
+  const log=getLog(w,k)||{ex:{},done:false};
+  let tot=0,dn=0,rem=0,cur=0,prv=0,hasPrev=false;
+  def.ex.forEach(id=>{
+    const ex=EX[id],e=log.ex[id]||{sets:[]},t=nSets(ex,w)+(e.extra||0),d=e.skipped?t:Math.min(e.sets.length,t);
+    tot+=t;dn+=d;rem+=(t-d)*(ex.rest+40)/60;
+    if(e.sets.length){cur+=ton(ex,e.sets);const pe=prevEntry(id,e.alt||null,w,k);if(pe){hasPrev=true;prv+=ton(ex,pe.sets.slice(0,e.sets.length))}}
+  });
+  const pct=tot?Math.round(dn/tot*100):0,mins=Math.max(1,Math.round(rem));
+  let badge='';
+  if(hasPrev){const d=cur-prv;badge='<span class="tot '+(d<0?'neg':d===0?'neu':'')+'">'+(d>0?'+':d<0?'−':'')+fmt(Math.abs(d))+' kg</span>'}
+  else if(cur>0)badge='<span class="tot neu">'+fmt(cur)+' kg</span>';
+  let h='<div class="shead"><div class="shr"><button class="back" data-act="back" aria-label="Retour à l’accueil">‹</button><div class="sht"><h2>'+esc(def.name)+'</h2><p class="mono muted">Semaine '+w+' · '+ph.label+' · ≈ '+mins+' min'+(dn?' restantes':'')+'</p></div>'+badge+'</div><div class="bar"><i style="width:'+pct+'%"></i></div></div>';
+  h+=def.ex.map((id,i)=>vEx(id,i,k,w,log)).join('');
+  h+='<div class="fin"><button class="btn '+(log.done?'ghost':'')+'" data-act="finish">'+(log.done?'Séance terminée · rouvrir':'Terminer la séance')+'</button></div>';
+  return h;
+}
+
+function vEx(id,i,k,w,log){
+  const ex=EX[id],e=log.ex[id]||{sets:[]},alt=e.alt||null,name=alt||ex.n;
+  const n=nSets(ex,w),tot=n+(e.extra||0),cnt=e.sets.length,complete=!!e.skipped||cnt>=tot;
+  const rg=repRange(ex,w),lo=rg[0],hi=rg[1],T=PH[phaseOf(w)].rpe;
+  const status=e.skipped?'<span class="st skip">passé</span>':complete?'<span class="st ok">✓</span>':cnt?'<span class="st mono">'+cnt+'/'+tot+'</span>':'<span class="st mono">'+tot+' séries</span>';
+  if(ui.open!==id)return '<section class="card ex closed '+(complete?'isdone':'')+'" id="ex-'+id+'"><button class="exh" data-act="toggle" data-ex="'+id+'"><span class="num mono">'+(i+1)+'</span><span class="exn"><b>'+esc(name)+'</b><small>'+ex.p+' · '+ex.per+'</small></span>'+status+'</button></section>';
+  const pe=prevEntry(id,alt,w,k);
+  let delta='';
+  if(cnt){const c=ton(ex,e.sets);if(pe)delta=chipDelta(c-ton(ex,pe.sets.slice(0,cnt)));else if(c>0)delta='<span class="chip">'+fmt(c)+' kg</span>'}
+  const prevTxt=pe?(pe.cycle<S.cycle?'Cycle précédent':'Semaine '+pe.week)+' : '+pe.sets.map(s=>ex.timed?s.r+' s':fmt(s.w)+'×'+s.r).join(', ')+' · RPE '+fmt(pe.sets[pe.sets.length-1].rpe):'Première fois : fais ta 1re série et note le RPE, l’appli ajuste la suite.';
+  const mach=S.notes[id]&&S.notes[id].machine;
+  let h='<section class="card ex open" id="ex-'+id+'"><button class="exh" data-act="toggle" data-ex="'+id+'" aria-expanded="true"><span class="num mono">'+(i+1)+'</span><span class="exn"><b>'+esc(name)+'</b><small>'+ex.p+' · '+ex.per+'</small></span>'+status+'</button><div class="exb">';
+  h+='<div class="chips"><span class="chip acc">'+n+' × '+lo+'-'+hi+(ex.timed?' s':'')+(ex.rl||'')+'</span><span class="chip">RPE '+T+'</span><span class="chip">repos '+fmtRest(ex.rest)+'</span>'+delta+'</div>';
+  h+='<p class="cue">'+esc(ex.cue)+'</p><p class="prev">'+esc(prevTxt)+'</p>';
+  if(mach)h+='<p class="memo"><b>Réglage</b>'+esc(mach)+'</p>';
+  if(e.pain)h+='<p class="memo warn"><b>Gêne signalée</b>'+esc(e.pain)+'</p>';
+  else if(pe&&pe.pain)h+='<p class="memo warn"><b>Dernière fois</b>'+esc(pe.pain)+'</p>';
+  h+='<div class="sets">';
+  const act=ui.edit[id]!=null?ui.edit[id]:(!e.skipped&&cnt<tot?cnt:null);
+  for(let s=0;s<tot;s++){
+    if(s===act){h+=vEditor(id,s,w,k,e,alt,ex,lo,hi,T)}
+    else if(s<cnt){const x=e.sets[s];h+='<button class="setrow" data-act="editset" data-ex="'+id+'" data-i="'+s+'" aria-label="Modifier la série '+(s+1)+'"><span class="n mono">'+(s+1)+'</span><span class="v mono">'+(ex.timed?x.r+' s'+(x.w?' · +'+fmt(x.w)+' kg':''):(x.w?fmt(x.w)+' kg × '+x.r:x.r+' reps'))+'</span><span class="r mono">RPE '+fmt(x.rpe)+'</span><span class="ok">✓</span></button>'}
+    else h+='<div class="setrow todo"><span class="n mono">'+(s+1)+'</span><span>à venir</span></div>';
+  }
+  if(act===null)h+='<p class="hint">'+(e.skipped?'Exercice passé.':'Exercice terminé. Touche une série pour la corriger.')+'</p>';
+  h+='<div class="acts"><button class="chipbtn" data-act="machine" data-ex="'+id+'">Réglage machine</button><button class="chipbtn" data-act="pain" data-ex="'+id+'">Signaler une gêne</button><button class="chipbtn" data-act="swap" data-ex="'+id+'">Passer ou remplacer</button><button class="chipbtn" data-act="extra" data-ex="'+id+'">+ 1 série</button></div>';
+  return h+'</div></div></section>';
+}
+
+function vEditor(id,idx,w,k,e,alt,ex,lo,hi,T){
+  const d=ensureDraft(id,idx,w,k,e,alt),editing=idx<e.sets.length;
+  const wl=(ex.timed||ex.bw)?'Lest (kg, optionnel)':'Charge ('+ex.per+')';
+  let h='<div class="editor" id="editor"><div class="eh"><b>Série '+(idx+1)+'</b><span class="mono muted">'+lo+'-'+hi+(ex.timed?' s':' reps')+' · RPE '+T+'</span></div><div class="two">'
+   +'<div><label for="in-r">'+(ex.timed?'Secondes':'Répétitions')+'</label><div class="stepper"><button class="step" data-act="adj" data-f="r" data-d="-1" aria-label="Moins">−</button><input id="in-r" inputmode="numeric" value="'+d.r+'"><button class="step" data-act="adj" data-f="r" data-d="1" aria-label="Plus">+</button></div></div>'
+   +'<div><label for="in-w">'+wl+'</label><div class="stepper"><button class="step" data-act="adj" data-f="w" data-d="-1" aria-label="Moins">−</button><input id="in-w" inputmode="decimal" value="'+fmt(d.w)+'"><button class="step" data-act="adj" data-f="w" data-d="1" aria-label="Plus">+</button></div></div></div>'
+   +'<div class="rpe" role="group" aria-label="RPE">'+[6,7,7.5,8,8.5,9,9.5,10].map(v=>'<button class="rp '+(v===d.rpe?'on':'')+'" data-act="rpe" data-v="'+v+'">'+fmt(v)+'</button>').join('')+'</div>'
+   +'<p class="hint">Effort ressenti : 10 = impossible d’en faire une de plus, 8 = encore 2 répétitions possibles.</p>';
+  if(d.why)h+='<p class="why">'+esc(d.why)+'</p>';
+  h+='<button class="btn" data-act="validate">'+(editing?'Modifier':'Valider la série')+'</button>';
+  if(editing)h+='<div class="acts"><button class="link" data-act="cancel" data-ex="'+id+'">Annuler</button><button class="link danger" data-act="delset" data-ex="'+id+'" data-i="'+idx+'">Supprimer la série</button></div>';
+  return h+'</div>';
+}
+
+function weightChart(){
+  const ws=S.weights.slice().sort((a,b)=>a.d<b.d?-1:1);
+  if(!ws.length)return '<p class="muted" style="margin-top:12px">Pèse-toi une fois par semaine, au réveil, pour suivre la tendance.</p>';
+  const W=320,H=150,px=14,py=16,t0=parse(ws[0].d).getTime(),t1=parse(ws[ws.length-1].d).getTime();
+  const ys=ws.map(x=>x.kg);let lo=Math.min.apply(null,ys),hi=Math.max.apply(null,ys);if(hi-lo<1){lo-=.5;hi+=.5}
+  const X=d=>ws.length===1||t1===t0?W/2:px+(parse(d).getTime()-t0)/(t1-t0)*(W-2*px);
+  const Y=v=>H-py-(v-lo)/(hi-lo)*(H-2*py);
+  const pts=ws.map(x=>X(x.d).toFixed(1)+','+Y(x.kg).toFixed(1));
+  const last=ws[ws.length-1];
+  return '<svg class="wchart" viewBox="0 0 '+W+' '+H+'" role="img" aria-label="Courbe du poids de corps"><polyline points="'+pts.join(' ')+'" fill="none" stroke="var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="'+X(last.d).toFixed(1)+'" cy="'+Y(last.kg).toFixed(1)+'" r="5.5" fill="var(--accent)"/></svg>';
+}
+
+function vProgress(){
+  const w=curWeek(),ws=S.weights.slice().sort((a,b)=>a.d<b.d?-1:1),last=ws[ws.length-1];
+  let nb=0;Object.values(S.logs).forEach(l=>Object.values(l.ex).forEach(e=>nb+=e.sets.length));
+  let h='<header class="top"><div><h1>Progression</h1><p class="mono muted">'+nb+' série'+(nb>1?'s':'')+' enregistrée'+(nb>1?'s':'')+'</p></div></header>';
+  h+='<div class="card"><div class="rowb"><h2>Poids de corps</h2>'+(last?'<span class="val">'+fmt(last.kg)+' kg</span>':'')+'</div>';
+  if(ws.length>1){const d=last.kg-ws[0].kg;h+='<p class="muted mono" style="font-size:13px;margin-top:4px">'+(d>0?'+':d<0?'−':'')+fmt(Math.abs(d))+' kg depuis le début</p>'}
+  h+=weightChart()+'<button class="chipbtn" data-act="weigh">Ajouter une pesée</button></div>';
+  const tons=[];for(let i=1;i<=w;i++)tons.push(weekTon(i));
+  const mx=Math.max.apply(null,tons.concat([1]));
+  h+='<div class="card"><h2>Tonnage par semaine</h2><div class="bars">'+tons.map((t,i)=>'<div class="'+(i+1===10?'low':'')+'"><i style="height:'+Math.max(3,Math.round(t/mx*100))+'%" title="'+Math.round(t)+' kg"></i></div>').join('')+'</div><div class="bl mono">'+tons.map((t,i)=>'<span>'+(i+1)+'</span>').join('')+'</div><p class="muted" style="font-size:14px;margin-top:12px">Les semaines de décharge sont volontairement plus basses.</p></div>';
+  h+='<h2 class="sec">Volume de la semaine '+w+'</h2><div class="card">'+volume(w).map(v=>{const p=Math.min(100,v.plan?v.did/v.plan*100:0);return '<div class="vol"><span>'+v.m+'</span><span class="tr"><i class="'+(v.did>=v.plan?'full':'')+'" style="width:'+p+'%"></i></span><span class="mono">'+half(v.did)+'/'+half(v.plan)+'</span></div>'}).join('')+'<p class="muted" style="font-size:13px;margin-top:8px">Séries réalisées sur séries prévues. Un muscle travaillé en appui compte pour une demi-série.</p></div>';
+  const recs=[];
+  for(const id in EX){const hs=history(id,null);if(!hs.length)continue;let best=null;hs.forEach(x=>x.sets.forEach(s=>{if(!best||e1(s)>e1(best))best=s}));const l=hs[hs.length-1];recs.push({n:EX[id].n,t:EX[id].timed,best,l:l.sets[l.sets.length-1]})}
+  if(recs.length){h+='<h2 class="sec">Meilleures séries</h2><div class="card">'+recs.map(r=>'<div class="rec"><b>'+esc(r.n)+'</b><span class="mono">'+(r.t?r.best.r+' s':fmt(r.best.w)+' kg × '+r.best.r)+'<br>dernier : '+(r.t?r.l.r+' s':fmt(r.l.w)+' × '+r.l.r)+'</span></div>').join('')+'</div>'}
+  return h;
+}
+
+function vSettings(){
+  const w=curWeek();
+  const TG=[['suggest','Suggestions de charge','Pré-remplit la charge conseillée selon ton RPE. Désactivé : reprend la série précédente.'],['timer','Chrono de repos','Démarre le repos dès que tu valides une série.'],['beep','Signal sonore','Un bip à la fin du repos.'],['vibrate','Vibration','Retour haptique à la fin du repos (selon ton téléphone).'],['wake','Garder l’écran allumé','L’écran reste actif pendant la séance.']];
+  let h='<header class="top"><div><h1>Réglages</h1><p class="mono muted">semaine '+w+' sur 10</p></div></header>';
+  h+='<div class="card"><label class="field"><span>Prénom (facultatif)</span><input class="inp" data-inp="name" value="'+esc(S.prefs.name)+'" maxlength="30" autocomplete="given-name"></label>'
+   +'<label class="field"><span>Semaine en cours : le lundi de la semaine 1 est recalculé automatiquement</span><select class="sel" data-inp="week">'+[1,2,3,4,5,6,7,8,9,10].map(n=>'<option value="'+n+'"'+(n===w?' selected':'')+'>Semaine '+n+' — '+PH[phaseOf(n)].label+'</option>').join('')+'</select></label>'
+   +'<label class="field"><span>Lundi de la semaine 1</span><input class="inp" type="date" data-inp="start" value="'+esc(S.start)+'"></label>'
+   +'<div class="field"><span>Jours des séances</span><div class="days">'+KEYS.map((k,i)=>'<select class="sel" data-inp="day" data-i="'+i+'" aria-label="Jour de la séance '+k+'">'+DAYN.map((d,j)=>'<option value="'+j+'"'+(S.days[i]===j?' selected':'')+'>'+k+' · '+d.slice(0,3)+'.</option>').join('')+'</select>').join('')+'</div></div></div>';
+  h+='<h2 class="sec">Séance</h2><div class="card">'+TG.map(t=>'<div class="tg"><div><b>'+t[1]+'</b><small>'+t[2]+'</small></div><button class="sw" role="switch" aria-checked="'+S.prefs[t[0]]+'" aria-label="'+t[1]+'" data-act="tog" data-p="'+t[0]+'"></button></div>').join('')+'</div>';
+  h+='<h2 class="sec">Apparence</h2><div class="card"><div class="seg">'+[['auto','Auto'],['dark','Sombre'],['light','Clair']].map(t=>'<button class="'+(S.prefs.theme===t[0]?'on':'')+'" data-act="theme" data-v="'+t[0]+'">'+t[1]+'</button>').join('')+'</div></div>';
+  h+='<h2 class="sec">Données</h2><div class="card"><p class="muted" style="font-size:15px;margin-bottom:12px">Tout est enregistré sur ce téléphone, dans ce navigateur.'+(S.lastExport?' Dernier export : '+esc(new Date(S.lastExport).toLocaleDateString('fr-FR',{day:'numeric',month:'long'}))+'.':' Aucun export pour l’instant.')+'</p><div class="stack"><button class="btn ghost" data-act="export">Exporter mes données</button><button class="btn ghost" data-act="import">Importer des données</button><button class="btn ghost" data-act="newcycle">Démarrer un nouveau cycle</button><button class="link danger" data-act="reset">Tout effacer</button></div></div>';
+  return h;
+}
+
+function vNav(){
+  const items=[['home','Accueil',DOM_ICON.home],['session','Séance',DOM_ICON.dumb],['progress','Progression',DOM_ICON.chart],['settings','Réglages',DOM_ICON.gear]],dot=inProgress();
+  return '<div class="navin">'+items.map(i=>'<button class="nv '+(ui.tab===i[0]?'on':'')+'" data-act="tab" data-t="'+i[0]+'" aria-current="'+(ui.tab===i[0]?'page':'false')+'">'+i[2]+'<span>'+i[1]+'</span>'+(i[0]==='session'&&dot?'<i class="dot"></i>':'')+'</button>').join('')+'</div>';
+}
+
+function vModal(){
+  const m=ui.modal;if(!m)return '';
+  let b='';
+  if(m.t==='weigh'){
+    const rec=S.weights.slice().sort((a,b)=>a.d<b.d?1:-1).slice(0,6);
+    b='<h2>Ma pesée</h2><p class="muted">Idéalement au réveil, dans les mêmes conditions.</p><div class="two"><label class="field"><span>Poids (kg)</span><input class="inp" id="in-kg" inputmode="decimal" placeholder="ex. 61,0" value="'+(rec[0]?fmt(rec[0].kg):'')+'"></label><label class="field"><span>Date</span><input class="inp" id="in-date" type="date" value="'+iso(new Date())+'"></label></div><button class="btn" data-act="weighsave">Enregistrer la pesée</button>'
+     +(rec.length?'<div class="wl">'+rec.map(x=>'<div class="rec"><b>'+esc(parse(x.d).toLocaleDateString('fr-FR',{day:'numeric',month:'short'}))+'</b><span class="mono">'+fmt(x.kg)+' kg<button class="x" data-act="weighdel" data-d="'+esc(x.d)+'" aria-label="Supprimer">Supprimer</button></span></div>').join('')+'</div>':'');
+  }else if(m.t==='export'){
+    b='<h2>Exporter mes données</h2><p class="muted">Copie ce texte et colle-le dans une note ou envoie-le-toi par message. Pour tout restaurer plus tard, utilise « Importer ».</p><textarea class="code" id="in-export" readonly>'+esc(JSON.stringify(S))+'</textarea><div class="stack" style="margin-top:12px"><button class="btn" data-act="copy">Copier</button><button class="link" data-act="close">Fermer</button></div>';
+  }else if(m.t==='import'){
+    b='<h2>Importer des données</h2><p class="muted">Colle ici le texte exporté. Il remplacera les données actuelles de ce téléphone.</p><textarea class="code" id="in-import" placeholder="Colle le texte ici"></textarea><div class="stack" style="margin-top:12px"><button class="btn" data-act="importgo">Importer</button><button class="link" data-act="close">Annuler</button></div>';
+  }else if(m.t==='confirm'){
+    b='<h2>'+esc(m.title)+'</h2><p class="muted">'+esc(m.text)+'</p><div class="stack"><button class="btn" data-act="'+m.act+'">'+esc(m.label)+'</button><button class="link" data-act="close">Annuler</button></div>';
+  }else if(m.t==='machine'){
+    b='<h2>Réglage machine</h2><p class="muted">Un mémo pour retrouver ton réglage à chaque séance (cran du siège, dossier, hauteur…).</p><textarea id="in-note" maxlength="200" placeholder="Siège cran 4, dossier cran 3">'+esc((S.notes[m.ex]&&S.notes[m.ex].machine)||'')+'</textarea><div class="stack" style="margin-top:12px"><button class="btn" data-act="machinesave">Enregistrer</button><button class="link" data-act="close">Annuler</button></div>';
+  }else if(m.t==='pain'){
+    const e=(getLog(ui.week,ui.sessKey)||{ex:{}}).ex[m.ex]||{};
+    b='<h2>Signaler une gêne</h2><p class="muted">Note où et quand tu la ressens. Elle te sera rappelée à la prochaine séance. Si elle persiste, demande l’avis d’un médecin ou d’un kiné.</p><textarea id="in-pain" maxlength="300" placeholder="Pincement dans le genou gauche en bas du squat">'+esc(e.pain||'')+'</textarea><div class="stack" style="margin-top:12px"><button class="btn" data-act="painsave">Enregistrer</button>'+(e.pain?'<button class="link danger" data-act="painclear">Effacer la note</button>':'')+'<button class="link" data-act="close">Annuler</button></div>';
+  }else if(m.t==='swap'){
+    const ex=EX[m.ex],l=getLog(ui.week,ui.sessKey),e=(l&&l.ex[m.ex])||{sets:[]};
+    b='<h2>Passer ou remplacer</h2>';
+    if(!e.sets.length){b+='<p class="muted">Remplace l’exercice avant ta première série : l’historique des charges est suivi séparément pour chaque variante.</p>'+ex.alts.map((a,i)=>'<button class="opt" data-act="swapto" data-i="'+i+'">'+esc(a)+'</button>').join('')}
+    else b+='<p class="muted">Tu as déjà des séries enregistrées sur cet exercice.</p>';
+    b+='<button class="opt" data-act="skipex">'+(e.sets.length?'Terminer l’exercice ici':'Passer cet exercice')+'</button>';
+    if(e.alt||e.skipped)b+='<button class="opt" data-act="unswap">Revenir à l’exercice prévu</button>';
+    b+='<button class="link" data-act="close">Fermer</button>';
+  }
+  return '<div class="backdrop" data-act="closemodal"><div class="sheet" role="dialog" aria-modal="true">'+b+'</div></div>';
+}
+
+/* ---------- Rendu ---------- */
+function render(keep){
+  const y=window.scrollY;
+  const body=ui.tab==='home'?vHome():ui.tab==='session'?vSession():ui.tab==='progress'?vProgress():vSettings();
+  $('#app').innerHTML=body;
+  $('#nav').innerHTML=vNav();
+  $('#modal').innerHTML=vModal();
+  applyTheme();wake();
+  if(keep)window.scrollTo(0,y);
+}
+function applyTheme(){const t=S.prefs.theme,r=document.documentElement;if(t==='auto')r.removeAttribute('data-theme');else r.setAttribute('data-theme',t)}
+function toast(m){const el=$('#toast');el.textContent=m;el.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('show'),2800)}
+function scrollToEx(id){setTimeout(()=>{const el=document.getElementById('ex-'+id);if(el)el.scrollIntoView({behavior:'smooth',block:'start'})},60)}
+
+/* ---------- Chrono, son, écran ---------- */
+function initAudio(){if(!S.prefs.beep)return;try{if(!ui.ac){const C=window.AudioContext||window.webkitAudioContext;if(C)ui.ac=new C()}if(ui.ac&&ui.ac.state==='suspended')ui.ac.resume()}catch(e){}}
+function beep(){
+  if(!S.prefs.beep||!ui.ac)return;
+  try{const c=ui.ac,o=c.createOscillator(),g=c.createGain();o.frequency.value=880;g.gain.setValueAtTime(.0001,c.currentTime);g.gain.exponentialRampToValueAtTime(.3,c.currentTime+.03);g.gain.exponentialRampToValueAtTime(.0001,c.currentTime+.6);o.connect(g);g.connect(c.destination);o.start();o.stop(c.currentTime+.65)}catch(e){}
+}
+function vib(){if(S.prefs.vibrate&&navigator.vibrate)try{navigator.vibrate([200,100,200])}catch(e){}}
+function buildTimer(){
+  const el=$('#timer');
+  if(!ui.timer){el.innerHTML='';return}
+  el.innerHTML='<div class="tbar" role="timer"><div class="tprog"><i id="tm-bar"></i></div><div class="trow"><span class="muted" id="tm-l">Repos</span><b class="mono" id="tm-t">0:00</b><span class="sp"></span><button class="chipbtn" data-act="tadj" data-d="-15">−15 s</button><button class="chipbtn" data-act="tadj" data-d="15">+15 s</button><button class="chipbtn" data-act="tstop">Passer</button></div></div>';
+}
+function startTimer(s){ui.timer={end:Date.now()+s*1000,total:s,fin:false,finAt:0};buildTimer();if(!tickH)tickH=setInterval(tick,250);tick()}
+function stopTimer(){ui.timer=null;buildTimer();if(tickH){clearInterval(tickH);tickH=null}}
+function tick(){
+  const t=ui.timer;if(!t){if(tickH){clearInterval(tickH);tickH=null}return}
+  const ms=t.end-Date.now(),left=Math.max(0,Math.ceil(ms/1000));
+  if(ms<=0&&!t.fin){t.fin=true;t.finAt=Date.now();beep();vib()}
+  if(t.fin&&Date.now()-t.finAt>8000){stopTimer();return}
+  const tt=$('#tm-t'),bb=$('#tm-bar'),ll=$('#tm-l'),bx=$('.tbar');if(!tt)return;
+  tt.textContent=Math.floor(left/60)+':'+pad(left%60);
+  bb.style.width=(t.fin?100:clamp(100-ms/(t.total*10),0,100))+'%';
+  ll.textContent=t.fin?'Repos terminé : à toi':'Repos';
+  bx.classList.toggle('fin',!!t.fin);
+}
+async function wake(){
+  const want=S.prefs.wake&&ui.tab==='session';
+  try{
+    if(want&&!ui.wl&&'wakeLock' in navigator&&document.visibilityState==='visible'){ui.wl=await navigator.wakeLock.request('screen');ui.wl.addEventListener('release',()=>{ui.wl=null})}
+    else if(!want&&ui.wl){await ui.wl.release();ui.wl=null}
+  }catch(e){ui.wl=null}
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')wake()});
+
+/* ---------- Actions ---------- */
+function readInputs(){
+  const d=ui.draft;if(!d)return;
+  const r=$('#in-r'),w=$('#in-w');
+  if(r){const v=parseInt(r.value,10);if(!isNaN(v))d.r=Math.max(0,v)}
+  if(w){const v=parseFloat(String(w.value).replace(',','.'));if(!isNaN(v))d.w=Math.max(0,v)}
+}
+function syncInputs(){const d=ui.draft;if(!d)return;const r=$('#in-r'),w=$('#in-w');if(r)r.value=d.r;if(w)w.value=fmt(d.w)}
+function openSession(k){ui.sessKey=k;ui.week=curWeek();ui.tab='session';ui.edit={};ui.draft=null;ui.open=firstIncomplete(k,ui.week)||SESS[k].ex[0];render();window.scrollTo(0,0)}
+function closeModal(){ui.modal=null;$('#modal').innerHTML=''}
+function curEx(id){const l=getLog(ui.week,ui.sessKey,true);return {l,e:getEx(l,id)}}
+
+const A={
+  tab(t){
+    const to=t.dataset.t;
+    if(to==='session'){ui.week=curWeek();if(!ui.sessKey)ui.sessKey=nextKey();if(ui.open===null)ui.open=firstIncomplete(ui.sessKey,ui.week)}
+    ui.tab=to;render();window.scrollTo(0,0);
+  },
+  open(t){openSession(t.dataset.k)},
+  back(){ui.tab='home';render();window.scrollTo(0,0)},
+  toggle(t){const id=t.dataset.ex;ui.open=ui.open===id?null:id;ui.draft=null;render(true)},
+  adj(t){
+    const d=ui.draft;if(!d)return;readInputs();
+    const ex=EX[d.ex],dir=+t.dataset.d;
+    if(t.dataset.f==='r')d.r=Math.max(0,d.r+dir*(ex.timed?5:1));
+    else d.w=Math.max(0,Math.round((d.w+dir*stepOf(ex,d.alt))*100)/100);
+    syncInputs();
+  },
+  rpe(t){const d=ui.draft;if(!d)return;d.rpe=+t.dataset.v;document.querySelectorAll('.rp').forEach(b=>b.classList.toggle('on',b===t))},
+  validate(){
+    const d=ui.draft;if(!d)return;readInputs();
+    if(!(d.r>0)){toast('Indique le nombre de répétitions.');return}
+    const ex=EX[d.ex],w=ui.week,k=ui.sessKey,c=curEx(d.ex),e=c.e,log=c.l;
+    const isNew=d.idx>=e.sets.length,set={w:d.w,r:d.r,rpe:d.rpe};
+    if(isNew)e.sets.push(set);else e.sets[d.idx]=set;
+    if(!log.started)log.started=Date.now();
+    ui.edit[d.ex]=null;ui.draft=null;save();initAudio();
+    const tot=nSets(ex,w)+(e.extra||0);
+    let nextId=null;
+    if(isNew&&e.sets.length>=tot){nextId=firstIncomplete(k,w);if(nextId)ui.open=nextId}
+    const all=firstIncomplete(k,w)===null;
+    if(isNew&&!all&&S.prefs.timer)startTimer(ex.rest);
+    else if(isNew&&all)toast('Toutes les séries sont faites. Termine la séance en bas de page.');
+    render(true);
+    if(nextId)scrollToEx(nextId);
+  },
+  editset(t){ui.edit[t.dataset.ex]=+t.dataset.i;ui.draft=null;render(true)},
+  cancel(t){ui.edit[t.dataset.ex]=null;ui.draft=null;render(true)},
+  delset(t){const c=curEx(t.dataset.ex);c.e.sets.splice(+t.dataset.i,1);ui.edit[t.dataset.ex]=null;ui.draft=null;save();render(true)},
+  extra(t){const c=curEx(t.dataset.ex);c.e.extra=Math.min(6,(c.e.extra||0)+1);if(c.e.skipped)c.e.skipped=false;ui.draft=null;save();render(true)},
+  machine(t){ui.modal={t:'machine',ex:t.dataset.ex};render(true)},
+  pain(t){ui.modal={t:'pain',ex:t.dataset.ex};render(true)},
+  swap(t){ui.modal={t:'swap',ex:t.dataset.ex};render(true)},
+  machinesave(){const v=$('#in-note').value.trim().slice(0,200),id=ui.modal.ex;if(v)S.notes[id]={machine:v};else delete S.notes[id];save();closeModal();render(true)},
+  painsave(){const v=$('#in-pain').value.trim().slice(0,300),c=curEx(ui.modal.ex);if(v)c.e.pain=v;else delete c.e.pain;save();closeModal();render(true)},
+  painclear(){const c=curEx(ui.modal.ex);delete c.e.pain;save();closeModal();render(true)},
+  swapto(t){const id=ui.modal.ex,c=curEx(id);c.e.alt=EX[id].alts[+t.dataset.i];c.e.skipped=false;ui.draft=null;save();closeModal();render(true)},
+  skipex(){const id=ui.modal.ex,c=curEx(id);c.e.skipped=true;ui.draft=null;const nx=firstIncomplete(ui.sessKey,ui.week);ui.open=nx;save();closeModal();render(true);if(nx)scrollToEx(nx)},
+  unswap(){const id=ui.modal.ex,c=curEx(id);delete c.e.alt;c.e.skipped=false;ui.draft=null;save();closeModal();render(true)},
+  finish(){
+    const l=getLog(ui.week,ui.sessKey,true);l.done=!l.done;
+    if(l.done){l.finished=Date.now();if(!l.started)l.started=l.finished;stopTimer();ui.sessKey=null;ui.open=null;ui.tab='home';toast('Séance enregistrée. Bien joué !')}
+    save();render();window.scrollTo(0,0);
+  },
+  weigh(){ui.modal={t:'weigh'};render(true)},
+  weighsave(){
+    const kg=parseFloat(String($('#in-kg').value).replace(',','.')),d=$('#in-date').value||iso(new Date());
+    if(!(kg>20&&kg<400)){toast('Indique un poids valide, par exemple 61,5.');return}
+    S.weights=S.weights.filter(x=>x.d!==d);S.weights.push({d,kg:Math.round(kg*10)/10});save();closeModal();render(true);toast('Pesée enregistrée.');
+  },
+  weighdel(t){S.weights=S.weights.filter(x=>x.d!==t.dataset.d);save();ui.modal={t:'weigh'};render(true)},
+  export(){ui.modal={t:'export'};render(true)},
+  copy(){
+    const ta=$('#in-export');ta.focus();ta.select();let ok=false;
+    try{ok=document.execCommand('copy')}catch(e){}
+    const done=()=>{S.lastExport=new Date().toISOString();save();toast('Données copiées. Colle-les dans une note.')};
+    if(ok)done();
+    else if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(ta.value).then(done,()=>toast('Sélectionne le texte et copie-le à la main.'));
+    else toast('Sélectionne le texte et copie-le à la main.');
+  },
+  import(){ui.modal={t:'import'};render(true)},
+  importgo(){
+    const v=$('#in-import').value.trim();
+    try{const o=JSON.parse(v);if(!o||typeof o!=='object'||!o.logs)throw 0;S=sanitize(o);save();closeModal();ui.sessKey=null;ui.open=null;ui.tab='home';render();window.scrollTo(0,0);toast('Données importées.')}
+    catch(e){toast('Ce texte n’est pas un export valide.')}
+  },
+  newcycle(){ui.modal={t:'confirm',title:'Nouveau cycle',text:'Le cycle repart à la semaine 1 cette semaine. Ton historique reste enregistré et sert de point de départ pour les charges.',act:'newcyclego',label:'Démarrer le cycle'};render(true)},
+  newcyclego(){S.cycle+=1;S.start=iso(mondayOf(new Date()));ui.sessKey=null;ui.open=null;ui.draft=null;save();closeModal();ui.tab='home';render();window.scrollTo(0,0);toast('Nouveau cycle lancé.')},
+  reset(){ui.modal={t:'confirm',title:'Tout effacer ?',text:'Séances, pesées et réglages seront supprimés de ce téléphone. Cette action est définitive : pense à exporter avant.',act:'resetgo',label:'Tout effacer'};render(true)},
+  resetgo(){S=defState();try{localStorage.removeItem(KEY)}catch(e){}save();stopTimer();ui.sessKey=null;ui.open=null;ui.draft=null;closeModal();ui.tab='home';render();window.scrollTo(0,0);toast('Données effacées.')},
+  tog(t){const p=t.dataset.p;S.prefs[p]=!S.prefs[p];save();if(p==='beep'&&S.prefs.beep)initAudio();render(true)},
+  theme(t){S.prefs.theme=t.dataset.v;save();render(true)},
+  tadj(t){const x=ui.timer;if(!x)return;const d=+t.dataset.d;x.end+=d*1000;x.total=Math.max(15,x.total+d);if(x.end>Date.now())x.fin=false;tick()},
+  tstop(){stopTimer()},
+  close(){closeModal()},
+  closemodal(t,ev){if(ev.target===t)closeModal()}
+};
+document.addEventListener('click',ev=>{
+  const t=ev.target.closest('[data-act]');if(!t)return;
+  const f=A[t.dataset.act];if(f)f(t,ev);
+});
+document.addEventListener('change',ev=>{
+  const t=ev.target,k=t.dataset&&t.dataset.inp;
+  if(t.id==='in-r'||t.id==='in-w'){readInputs();return}
+  if(!k)return;
+  if(k==='name'){S.prefs.name=t.value.trim().slice(0,30);save();render(true)}
+  else if(k==='week'){const n=+t.value,d=mondayOf(new Date());d.setDate(d.getDate()-(n-1)*7);S.start=iso(d);ui.draft=null;save();render(true);toast('Semaine '+n+' sélectionnée.')}
+  else if(k==='start'){if(t.value){S.start=iso(mondayOf(parse(t.value)));ui.draft=null;save();render(true)}}
+  else if(k==='day'){S.days[+t.dataset.i]=+t.value;save();render(true)}
+});
+document.addEventListener('focusin',ev=>{const t=ev.target;if(t.id==='in-r'||t.id==='in-w')setTimeout(()=>{try{t.select()}catch(e){}},0)});
+
+render();
+})();
+</script>
+</body>
+</html>
